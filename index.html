@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Repayment Guessing Game, Level 1</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Loan Repayment Game - Level 1</h1>
+
+        <div>
+            <button onclick="window.location.href='index_2.html'">Go to Level 2</button>
+        </div>
+
+        <p>Guess if this person repaid their loan based on their income and credit score.</p>
+
+        <div class="record-info">
+            <p id="income"></p>
+            <p id="credit-score"></p>
+        </div>
+
+        <div class="button-container">
+            <button onclick="guess(1)">Repaid</button>
+            <button onclick="guess(0)">Did Not Repay</button>
+        </div>
+
+        <p id="result"></p>
+
+        <canvas id="chart" width="400" height="200"></canvas>
+
+        <div class="confusion-matrix">
+            <h2>Confusion Matrix</h2>
+            <table>
+                <tr>
+                    <th></th>
+                    <th>Predicted Positive</th>
+                    <th>Predicted Negative</th>
+                </tr>
+                <tr>
+                    <td>Actual Positive</td>
+                    <td id="tp">0</td> <!-- True Positive -->
+                    <td id="fn">0</td> <!-- False Negative -->
+                </tr>
+                <tr>
+                    <td>Actual Negative</td>
+                    <td id="fp">0</td> <!-- False Positive -->
+                    <td id="tn">0</td> <!-- True Negative -->
+                </tr>
+            </table>
+        </div>
+        <div class="money-tracking">
+            <h2>Financial Summary</h2>
+            <p>Money Made/Lost: <span id="money-total">$0</span></p>
+            <p>Opportunity Cost: <span id="opportunity-cost-total">$0</span></p>
+        </div>
+        
+        
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
