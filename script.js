@@ -10,83 +10,80 @@ let falseNegatives = 0;
 let moneyTotal = 0;
 let opportunityCostTotal = 0;
 
+let level = 1;  // Default level
 
-// Load the CSV data using fetch
-fetch('easy.csv')
-    .then(response => response.text())
-    .then(data => {
-        const parsedData = parseCSV(data);
-        splitData(parsedData);
-        initializeChart();  // Initialize the scatter plot
-        showNextRecord();    // Show the first record
-    })
-    .catch(error => console.error("Error loading CSV:", error));
+// Level change handler
+function changeLevel() {
+    level = parseInt(document.getElementById('level-selector').value);
+    loadDataForLevel(level);
+}
 
-// Parse the CSV data into a JavaScript object
+// Load data based on the selected level
+function loadDataForLevel(level) {
+    const dataset = level === 1 ? 'easy.csv' : 'difficult.csv';  // Example distinction
+    fetchDataAndInitialize(dataset);
+}
+
+// Fetch the CSV data and initialize everything
+function fetchDataAndInitialize(dataset) {
+    fetch(dataset)
+        .then(response => response.text())
+        .then(data => {
+            const parsedData = parseCSV(data);
+            splitData(parsedData);
+            initializeChart();
+            showNextRecord();
+        })
+        .catch(error => console.error("Error loading CSV:", error));
+}
+
+// Parse CSV, split data, initialize chart - kept modular for reusability
 function parseCSV(data) {
     const lines = data.split('\n');
     const headers = lines[0].split(',');
 
     return lines.slice(1).map(line => {
         const values = line.split(',');
-        
-        // Skip any line that does not have the expected number of columns
         if (values.length !== headers.length) return null;
 
         const record = {};
         headers.forEach((header, index) => {
             if (values[index] !== undefined) {
-                // Clean up each value to handle any extra whitespace or special characters
-                record[header.trim()] = values[index].trim();  // Trim spaces and end of line characters
+                record[header.trim()] = values[index].trim();
             }
         });
         return record;
-    }).filter(record => record !== null);  // Filter out any null records from incomplete lines
+    }).filter(record => record !== null);
 }
 
-// Split data into training and test sets
 function splitData(data) {
-    const splitIndex = Math.floor(data.length * 0.8);  // 80% for training
+    const splitIndex = Math.floor(data.length * 0.8);
     trainingSet = data.slice(0, splitIndex);
 }
 
-// Show the next record to the user
 function showNextRecord() {
     if (currentRecordIndex >= trainingSet.length) {
-        currentRecordIndex = 0;  // Loop around if we reach the end
+        currentRecordIndex = 0;  // Loop around
     }
-    
+
     const record = trainingSet[currentRecordIndex];
     document.getElementById('income').textContent = `Income: $${Math.round(record['Income'])}`;
     document.getElementById('credit-score').textContent = `Credit Score: ${Math.round(record['Credit_Score'])}`;
 
     currentRecordIndex++;
-    console.log(record);
 }
 
-// Handle user guesses
 function guess(userGuess) {
-    const record = trainingSet[currentRecordIndex - 1];  // Current record shown
+    const record = trainingSet[currentRecordIndex - 1];
+    const actual = parseInt(record['Repay_Loan']);
+    const correct = (userGuess === actual);
 
-    // Clean and parse repayment status
-    const actual = parseInt(record['Repay_Loan']);       // Correct repayment status (cleaned)
+    document.getElementById('result').textContent = correct ? "Correct!" : "Incorrect!";
 
-    const resultElement = document.getElementById('result');
-
-    // Determine if the guess was correct
-    const correct = (userGuess === actual);  // Compare user guess to actual repayment status
-    resultElement.textContent = correct ? "Correct!" : "Incorrect!";
-
-    // Update the confusion matrix based on prediction and actual outcome
     updateConfusionMatrixCounts(userGuess, actual);
-
-    // Update the scatter plot with the new point
     updateScatterPlot(record['Income'], record['Credit_Score'], actual, correct);
-    showNextRecord();  // Show the next record after a guess
+    showNextRecord();
 }
-
-// Initialize the scatter chart
-let scatterChart;
 
 function initializeChart() {
     const ctx = document.getElementById('chart').getContext('2d');
@@ -95,10 +92,10 @@ function initializeChart() {
         data: {
             datasets: [{
                 label: 'Loan Records',
-                data: [], // Store the data points (income and credit score)
-                pointBackgroundColor: [], // Colors for each point
-                pointBorderColor: [], // Border colors
-                pointStyle: [], // Styles (circle, cross)
+                data: [],
+                pointBackgroundColor: [],
+                pointBorderColor: [],
+                pointStyle: [],
             }]
         },
         options: {
@@ -133,6 +130,29 @@ function initializeChart() {
     });
 }
 
+// Update the confusion matrix and financial metrics
+function updateConfusionMatrixCounts(prediction, actual) {
+    if (prediction === 1) {
+        actual === 1 ? (truePositives++, moneyTotal += 2000) : (falsePositives++, moneyTotal -= 10000);
+    } else {
+        actual === 0 ? trueNegatives++ : (falseNegatives++, opportunityCostTotal += 2000);
+    }
+    updateConfusionMatrix();
+    updateMoneyDisplay();
+}
+
+function updateConfusionMatrix() {
+    document.getElementById('tp').textContent = truePositives;
+    document.getElementById('fp').textContent = falsePositives;
+    document.getElementById('tn').textContent = trueNegatives;
+    document.getElementById('fn').textContent = falseNegatives;
+}
+
+function updateMoneyDisplay() {
+    document.getElementById('money-total').textContent = `$${moneyTotal.toLocaleString()}`;
+    document.getElementById('opportunity-cost-total').textContent = `$${opportunityCostTotal.toLocaleString()}`;
+}
+
 // Update the scatter plot with new point
 function updateScatterPlot(income, creditScore, actual, correct) {
     // Determine the color: blue if repaid (1), red if not repaid (0)
@@ -156,45 +176,7 @@ function updateScatterPlot(income, creditScore, actual, correct) {
     scatterChart.update();
 }
 
-
-// Update confusion matrix counts after each guess
-function updateConfusionMatrixCounts(prediction, actual) {
-    if (prediction === 1) {
-        // User predicts the person would repay
-        if (actual === 1) {
-            // True Positive: Person repaid, profit of $2,000
-            truePositives++;
-            moneyTotal += 2000; // Profit from repayment
-        } else {
-            // False Positive: Person did not repay, loss of $10,000
-            falsePositives++;
-            moneyTotal -= 10000; // Loss of the loan principal
-        }
-    } else if (prediction === 0) {
-        // User predicts the person would not repay
-        if (actual === 0) {
-            // True Negative: Person would not repay, no financial impact
-            trueNegatives++;
-        } else {
-            // False Negative: Person would have repaid, opportunity cost of $2,000
-            falseNegatives++;
-            opportunityCostTotal += 2000; // Opportunity cost
-        }
-    }
-    updateConfusionMatrix();
-    updateMoneyDisplay(); // Add a function to update the displayed totals
-}
-
-
-// Display the confusion matrix in the UI
-function updateConfusionMatrix() {
-    document.getElementById('tp').textContent = truePositives;
-    document.getElementById('fp').textContent = falsePositives;
-    document.getElementById('tn').textContent = trueNegatives;
-    document.getElementById('fn').textContent = falseNegatives;
-}
-
-function updateMoneyDisplay() {
-    document.getElementById('money-total').textContent = `$${moneyTotal.toLocaleString()}`;
-    document.getElementById('opportunity-cost-total').textContent = `$${opportunityCostTotal.toLocaleString()}`;
-}
+// Initialize the app with default level 1 data
+document.addEventListener('DOMContentLoaded', () => {
+    loadDataForLevel(level);
+});

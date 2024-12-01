@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loan Repayment Guessing Game, Level 1</title>
+    <title>Loan Repayment Guessing Game</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-
     <div class="container">
-        <h1>Loan Repayment Game - Level 1</h1>
-
+        <h1>Loan Repayment Game</h1>
+        
+        <!-- Level Selector -->
         <div>
-            <button onclick="window.location.href='index_2.html'">Go to Level 2</button>
+            <label for="level-selector">Select Level:</label>
+            <select id="level-selector" onchange="changeLevel()">
+                <option value="1">Level 1</option>
+                <option value="2">Level 2</option>
+            </select>
         </div>
-
+        
         <p>Guess if this person repaid their loan based on their income and credit score.</p>
 
         <div class="record-info">
@@ -52,13 +56,12 @@
                 </tr>
             </table>
         </div>
+
         <div class="money-tracking">
             <h2>Financial Summary</h2>
             <p>Money Made/Lost: <span id="money-total">$0</span></p>
             <p>Opportunity Cost: <span id="opportunity-cost-total">$0</span></p>
         </div>
-        
-        
     </div>
 
     <script src="script.js"></script>
